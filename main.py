@@ -1,5 +1,13 @@
 """EduGenie — FastAPI backend. Run with: uvicorn main:app --reload"""
+import os
 from pathlib import Path
+
+from dotenv import load_dotenv
+
+# Load .env from the project root (next to this file) — ensures the API key
+# is available even when uvicorn is launched from a different directory.
+_ENV_FILE = Path(__file__).resolve().parent / ".env"
+load_dotenv(dotenv_path=_ENV_FILE, override=False)
 
 from fastapi import FastAPI, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -15,6 +23,17 @@ from summary_module import summarize_text
 BASE_DIR = Path(__file__).resolve().parent
 
 app = FastAPI(title="EduGenie", description="Google Gemini Powered Learning Assistant")
+
+
+@app.on_event("startup")
+async def _check_api_key():
+    key = (os.getenv("GEMINI_API_KEY") or "").strip()
+    if not key:
+        print("[WARNING] GEMINI_API_KEY is not set!")
+        print(f"   Looked for .env at: {_ENV_FILE}")
+        print("   Copy .env.example -> .env and add your key.")
+    else:
+        print(f"[OK] GEMINI_API_KEY loaded ({len(key)} chars, ends with ...{key[-4:]})")
 
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 templates = Jinja2Templates(directory=BASE_DIR / "templates")

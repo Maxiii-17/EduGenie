@@ -1,10 +1,14 @@
 """Shared Gemini client: new SDK, model fallback chain, friendly errors."""
 import os
 import re
+from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv()
+# Always load .env from the project directory (next to this script),
+# regardless of the current working directory when the app is started.
+_ENV_FILE = Path(__file__).resolve().parent / ".env"
+load_dotenv(dotenv_path=_ENV_FILE, override=False)
 
 PRIMARY_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
 if PRIMARY_MODEL.startswith("models/"):
